@@ -3,6 +3,10 @@ plugins {
     id 'io.quarkus'
 }
 
+if (!System.getenv('CI')) {
+    apply plugin: 'com.glow.local-env'
+}
+
 repositories {
     mavenCentral()
     mavenLocal()
