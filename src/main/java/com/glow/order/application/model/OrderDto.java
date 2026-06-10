@@ -1,6 +1,9 @@
 package com.glow.order.application.model;
 
 import com.glow.order.domain.model.Address;
+import com.glow.order.domain.model.OrderItem;
+
+import java.util.List;
 
 public record OrderDto(
     String id,
@@ -13,6 +16,7 @@ public record OrderDto(
     Address restaurantAddress,
     String phoneNumber,
     String restaurantTransferId,
-    String courierTransferId
+    String courierTransferId,
+    List<OrderItem> orderItems
 ) {
 }

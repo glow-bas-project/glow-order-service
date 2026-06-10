@@ -1,15 +1,19 @@
 package com.glow.order.application.services;
 
+import com.glow.order.application.api.model.CheckoutOrderRequest;
 import com.glow.order.application.api.model.CreateOrderRequest;
 import com.glow.order.application.api.model.UpdateOrderRequest;
 import com.glow.order.application.mappers.OrderDtoMapper;
 import com.glow.order.application.model.OrderDto;
 import com.glow.order.domain.model.Address;
 import com.glow.order.domain.model.Order;
+import com.glow.order.domain.model.OrderItem;
 import com.glow.order.domain.model.OrderStatus;
 import com.glow.order.domain.repository.OrderRepository;
 import com.glow.order.domain.shared.PageRequest;
 import com.glow.order.domain.shared.PageResult;
+import com.glow.order.infrastructure.clients.PaymentApiClient;
+import com.glow.order.infrastructure.clients.PaymentIntentResponse;
 import jakarta.ws.rs.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +43,9 @@ class OrderServiceTest {
     @Mock
     OrderDtoMapper mapper;
 
+    @Mock
+    PaymentApiClient paymentApiClient;
+
     @InjectMocks
     OrderService service;
 
@@ -50,7 +57,9 @@ class OrderServiceTest {
             new Address("2 Main St", "City", "Country", 3.0, 4.0),
             "12345678",
             1500,
-            "pi_test_123");
+            "pi_test_123",
+            null,
+            List.of(new OrderItem(java.util.UUID.randomUUID(), "Burger", 500, 3)));
 
         when(mapper.toDto(any(Order.class))).thenAnswer(invocation -> toDto(invocation.getArgument(0)));
 
@@ -73,7 +82,9 @@ class OrderServiceTest {
             new Address("2 Main St", "City", "Country", 3.0, 4.0),
             "12345678",
             1500,
-            "pi_test_123");
+            "pi_test_123",
+            null,
+            List.of(new OrderItem(java.util.UUID.randomUUID(), "Burger", 500, 3)));
 
         when(mapper.toDto(any(Order.class))).thenAnswer(invocation -> toDto(invocation.getArgument(0)));
 
@@ -86,6 +97,38 @@ class OrderServiceTest {
         assertEquals(OrderStatus.CREATED, captor.getValue().getStatus());
         assertNotNull(captor.getValue().getTransferGroup());
         assertFalse(captor.getValue().getTransferGroup().isBlank());
+    }
+
+    @Test
+    void checkoutOrder_createsPaymentIntentAndPersistsOrder() {
+        // given
+        var customerId = java.util.UUID.randomUUID();
+        var request = new CheckoutOrderRequest(
+            new Address("1 Main St", "City", "Country", 1.0, 2.0),
+            new Address("2 Main St", "City", "Country", 3.0, 4.0),
+            "12345678",
+            customerId,
+            1500,
+            List.of(new OrderItem(java.util.UUID.randomUUID(), "Burger", 500, 3)));
+
+        when(paymentApiClient.createPaymentIntent(any())).thenReturn(
+            new PaymentIntentResponse(
+                java.util.UUID.randomUUID(),
+                "pi_checkout_123",
+                1500,
+                customerId,
+                java.util.UUID.randomUUID(),
+                "PENDING"));
+        when(mapper.toDto(any(Order.class))).thenAnswer(invocation -> toDto(invocation.getArgument(0)));
+
+        // when
+        var dto = service.checkoutOrder(request);
+
+        // then
+        assertEquals("pi_checkout_123", dto.stripePaymentIntentId());
+        assertEquals(OrderStatus.PROCESSING.name(), dto.status());
+        verify(paymentApiClient).createPaymentIntent(any());
+        verify(orderRepository).save(any(Order.class));
     }
 
     @Test
@@ -176,7 +219,8 @@ class OrderServiceTest {
             123,
             "restaurant-transfer-updated",
             "courier-transfer-updated",
-            OrderStatus.PROCESSING);
+            OrderStatus.PROCESSING,
+            List.of(new OrderItem(java.util.UUID.randomUUID(), "Burger", 500, 3)));
 
         when(orderRepository.findById(existing.getId().toString())).thenReturn(Optional.of(existing));
         when(mapper.toDto(any(Order.class))).thenAnswer(invocation -> toDto(invocation.getArgument(0)));
@@ -217,6 +261,7 @@ class OrderServiceTest {
             .stripePaymentIntentId("pi_" + id)
             .totalPrice(1500)
             .status(OrderStatus.CREATED)
+            .orderItems(List.of(new OrderItem(java.util.UUID.randomUUID(), "Burger", 500, 3)))
             .build();
     }
 
@@ -232,6 +277,7 @@ class OrderServiceTest {
             order.getRestaurantAddress(),
             order.getPhoneNumber(),
             order.getRestaurantTransferId(),
-            order.getCourierTransferId());
+            order.getCourierTransferId(),
+            order.getOrderItems());
     }
 }

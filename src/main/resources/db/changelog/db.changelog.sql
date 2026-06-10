@@ -23,3 +23,13 @@ CREATE TABLE IF NOT EXISTS orders (
     restaurant_longitude DOUBLE PRECISION NOT NULL,
     restaurant_latitude DOUBLE PRECISION NOT NULL
 );
+
+--changeset sarh:10_06_2026-2
+CREATE TABLE IF NOT EXISTS order_items (
+    order_id VARCHAR(255) NOT NULL,
+    menu_item_id VARCHAR(255) NOT NULL,
+    item_name VARCHAR(255) NOT NULL,
+    item_quantity INTEGER NOT NULL,
+    item_price INTEGER NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+);

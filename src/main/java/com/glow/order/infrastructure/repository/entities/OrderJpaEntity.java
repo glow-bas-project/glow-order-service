@@ -4,6 +4,8 @@ import com.glow.order.domain.model.OrderStatus;
 import jakarta.persistence.*;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -42,6 +44,10 @@ public class OrderJpaEntity {
 
     @Column(name = "courier_transfer_id")
     private String courierTransferId;
+
+    @ElementCollection
+    @CollectionTable(name = "order_items", joinColumns = @JoinColumn(name = "order_id"))
+    private List<OrderItemJpaEntity> orderItems = new ArrayList<>();
 
     @Embedded
     private RestaurantAddressEntity restaurantAddress;
@@ -151,6 +157,14 @@ public class OrderJpaEntity {
 
     public void setDeliveryAddress(DeliveryAddressEntity deliveryAddress) {
         this.deliveryAddress = deliveryAddress;
+    }
+
+    public List<OrderItemJpaEntity> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItemJpaEntity> orderItems) {
+        this.orderItems = orderItems;
     }
 
 }

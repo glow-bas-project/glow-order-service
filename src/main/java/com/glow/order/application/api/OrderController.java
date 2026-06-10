@@ -1,5 +1,6 @@
 package com.glow.order.application.api;
 
+import com.glow.order.application.api.model.CheckoutOrderRequest;
 import com.glow.order.application.api.model.CreateOrderRequest;
 import com.glow.order.application.api.model.FindOrderIdsRequest;
 import com.glow.order.application.api.model.FindOrderIdsResponse;
@@ -27,6 +28,12 @@ public class OrderController {
     @POST
     public RestResponse<OrderDto> createOrder(CreateOrderRequest request) {
         return RestResponse.ok(service.createOrder(request));
+    }
+
+    @POST
+    @Path("checkout")
+    public RestResponse<OrderDto> checkoutOrder(CheckoutOrderRequest request) {
+        return RestResponse.status(RestResponse.Status.CREATED, service.checkoutOrder(request));
     }
 
     @GET
