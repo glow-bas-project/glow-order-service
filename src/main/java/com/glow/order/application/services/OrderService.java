@@ -41,6 +41,7 @@ public class OrderService {
             request.phoneNumber(),
             request.totalPrice(),
             request.stripePaymentIntentId(),
+            null,
             OrderStatus.CREATED,
             request.orderItems());
 
@@ -62,6 +63,7 @@ public class OrderService {
             request.phoneNumber(),
             request.totalPrice(),
             "pending-" + UUID.randomUUID(),
+            null,
             OrderStatus.CREATED,
             request.orderItems());
 
@@ -70,6 +72,7 @@ public class OrderService {
 
         var order = draftOrder.toBuilder()
             .stripePaymentIntentId(paymentIntent.stripePaymentIntentId())
+            .stripeClientSecret(paymentIntent.stripeClientSecret())
             .status(OrderStatus.PROCESSING)
             .build();
 
@@ -131,6 +134,7 @@ public class OrderService {
         String phoneNumber,
         Integer totalPrice,
         String stripePaymentIntentId,
+        String stripeClientSecret,
         OrderStatus status,
         List<OrderItem> orderItems) {
 
@@ -139,6 +143,7 @@ public class OrderService {
             .deliveryAddress(deliveryAddress)
             .restaurantAddress(restaurantAddress)
             .stripePaymentIntentId(stripePaymentIntentId)
+            .stripeClientSecret(stripeClientSecret)
             .totalPrice(totalPrice)
             .status(status)
             .orderItems(orderItems)

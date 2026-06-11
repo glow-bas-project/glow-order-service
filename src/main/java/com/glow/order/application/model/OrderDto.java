@@ -9,6 +9,7 @@ public record OrderDto(
     String id,
     Integer totalPrice,
     String stripePaymentIntentId,
+    String stripeClientSecret,
     String transferGroup,
     Integer platformFeeAmount,
     String status,

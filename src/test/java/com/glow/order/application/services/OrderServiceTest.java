@@ -115,6 +115,7 @@ class OrderServiceTest {
             new PaymentIntentResponse(
                 java.util.UUID.randomUUID(),
                 "pi_checkout_123",
+                "pi_checkout_123_secret_xyz",
                 1500,
                 customerId,
                 java.util.UUID.randomUUID(),
@@ -270,6 +271,7 @@ class OrderServiceTest {
             order.getId().toString(),
             order.getTotalPrice(),
             order.getStripePaymentIntentId(),
+            order.getStripeClientSecret(),
             order.getTransferGroup(),
             order.getPlatformFeeAmount(),
             order.getStatus().name(),
