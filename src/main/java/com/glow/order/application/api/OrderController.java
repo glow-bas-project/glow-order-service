@@ -26,6 +26,7 @@ public class OrderController {
     }
 
     @POST
+    @Path("create")
     public RestResponse<OrderDto> createOrder(CreateOrderRequest request) {
         return RestResponse.ok(service.createOrder(request));
     }
