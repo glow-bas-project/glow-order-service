@@ -2,21 +2,16 @@ package com.glow.order.application.api.model;
 
 import com.glow.order.domain.model.Address;
 import com.glow.order.domain.model.OrderItem;
-import com.glow.order.domain.model.OrderStatus;
 
 import java.util.List;
+import java.util.UUID;
 
-public record UpdateOrderRequest(
+public record CheckoutOrderRequest(
     Address deliveryAddress,
     Address restaurantAddress,
     String phoneNumber,
+    UUID customerId,
     Integer totalPrice,
-    String stripePaymentIntentId,
-    String transferGroup,
-    Integer platformFeeAmount,
-    String restaurantTransferId,
-    String courierTransferId,
-    OrderStatus status,
     List<OrderItem> orderItems
 ) {
 }
