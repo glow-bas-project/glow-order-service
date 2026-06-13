@@ -6,6 +6,8 @@ import com.glow.order.application.api.model.FindOrderIdsRequest;
 import com.glow.order.application.api.model.FindOrderIdsResponse;
 import com.glow.order.application.api.model.MaterialiseOrdersByIdsRequest;
 import com.glow.order.application.api.model.UpdateOrderRequest;
+import com.glow.order.application.api.model.NotifyRestaurantRequest;
+import com.glow.order.application.api.model.UpdateOrderStatusRequest;
 import com.glow.order.application.model.OrderDto;
 import com.glow.order.application.services.OrderService;
 import jakarta.ws.rs.*;
@@ -66,10 +68,24 @@ public class OrderController {
         return RestResponse.ok(service.materialise(request.ids()));
     }
 
+    @POST
+    @Path("{id}/notify-restaurant")
+    public RestResponse<Void> notifyRestaurant(@PathParam("id") String orderId, NotifyRestaurantRequest request) {
+        service.notifyRestaurant(orderId, request.restaurantId());
+        return RestResponse.noContent();
+    }
+
     @PUT
     @Path("{id}")
     public RestResponse<OrderDto> updateById(@PathParam("id") String id, UpdateOrderRequest request) {
         return RestResponse.ok(service.updateOrder(id, request));
+    }
+
+    @PATCH
+    @Path("{id}/status")
+    public RestResponse<OrderDto> updateStatus(@PathParam("id") String id,
+                                                UpdateOrderStatusRequest request) {
+        return RestResponse.ok(service.updateStatus(id, request.status()));
     }
 
     @DELETE

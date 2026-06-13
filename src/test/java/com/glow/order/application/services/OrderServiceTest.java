@@ -103,12 +103,14 @@ class OrderServiceTest {
     void checkoutOrder_createsPaymentIntentAndPersistsOrder() {
         // given
         var customerId = java.util.UUID.randomUUID();
+        var restaurantId = java.util.UUID.randomUUID();
         var request = new CheckoutOrderRequest(
             new Address("1 Main St", "City", "Country", 1.0, 2.0),
             new Address("2 Main St", "City", "Country", 3.0, 4.0),
             "12345678",
             customerId,
             1500,
+            restaurantId,
             List.of(new OrderItem(java.util.UUID.randomUUID(), "Burger", 500, 3)));
 
         when(paymentApiClient.createPaymentIntent(any())).thenReturn(

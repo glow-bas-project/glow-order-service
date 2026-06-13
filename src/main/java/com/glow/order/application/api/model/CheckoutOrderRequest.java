@@ -12,6 +12,7 @@ public record CheckoutOrderRequest(
     String phoneNumber,
     UUID customerId,
     Integer totalPrice,
+    UUID restaurantId, 
     List<OrderItem> orderItems
 ) {
 }
