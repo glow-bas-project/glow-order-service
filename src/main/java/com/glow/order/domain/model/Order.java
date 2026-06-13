@@ -3,6 +3,7 @@ package com.glow.order.domain.model;
 import com.glow.order.domain.shared.DomainPrecondition;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -12,6 +13,7 @@ public class Order {
     private final Instant updatedAt;
     private final Integer totalPrice;
     private final String stripePaymentIntentId;
+    private final String stripeClientSecret;
     private final String transferGroup;
     private final Integer platformFeeAmount;
     private final String restaurantTransferId;
@@ -20,6 +22,7 @@ public class Order {
     private final Address deliveryAddress;
     private final Address restaurantAddress;
     private final String phoneNumber;
+    private final List<OrderItem> orderItems;
 
     private Order(Builder builder) {
         if (Objects.isNull(builder.id)) {
@@ -61,6 +64,7 @@ public class Order {
             this.platformFeeAmount = builder.platformFeeAmount;
         }
 
+        this.stripeClientSecret = builder.stripeClientSecret;
         this.restaurantTransferId = builder.restaurantTransferId;
 
         this.courierTransferId = builder.courierTransferId;
@@ -79,6 +83,8 @@ public class Order {
 
         this.phoneNumber = DomainPrecondition.requireNonBlank(builder.phoneNumber,
             "Phone number cannot be null or empty");
+
+        this.orderItems = Objects.isNull(builder.orderItems) ? List.of() : builder.orderItems;
     }
 
     public static Builder builder() {
@@ -103,6 +109,10 @@ public class Order {
 
     public String getStripePaymentIntentId() {
         return stripePaymentIntentId;
+    }
+
+    public String getStripeClientSecret() {
+        return stripeClientSecret;
     }
 
     public String getTransferGroup() {
@@ -137,6 +147,10 @@ public class Order {
         return phoneNumber;
     }
 
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
     public Builder toBuilder() {
         return new Builder()
             .id(id)
@@ -144,6 +158,7 @@ public class Order {
             .updatedAt(updatedAt)
             .totalPrice(totalPrice)
             .stripePaymentIntentId(stripePaymentIntentId)
+            .stripeClientSecret(stripeClientSecret)
             .transferGroup(transferGroup)
             .platformFeeAmount(platformFeeAmount)
             .restaurantTransferId(restaurantTransferId)
@@ -151,7 +166,8 @@ public class Order {
             .status(status)
             .deliveryAddress(deliveryAddress)
             .restaurantAddress(restaurantAddress)
-            .phoneNumber(phoneNumber);
+            .phoneNumber(phoneNumber)
+            .orderItems(orderItems);
     }
 
     @Override
@@ -167,14 +183,14 @@ public class Order {
             Objects.equals(courierTransferId, order.courierTransferId) &&
             status == order.status && Objects.equals(deliveryAddress, order.deliveryAddress) &&
             Objects.equals(restaurantAddress, order.restaurantAddress) &&
-            Objects.equals(phoneNumber, order.phoneNumber);
+            Objects.equals(phoneNumber, order.phoneNumber) && Objects.equals(orderItems, order.orderItems);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, createdAt, updatedAt, totalPrice, stripePaymentIntentId, transferGroup,
             platformFeeAmount, restaurantTransferId, courierTransferId, status, deliveryAddress,
-            restaurantAddress, phoneNumber);
+            restaurantAddress, phoneNumber, orderItems);
     }
 
     public static class Builder {
@@ -183,6 +199,7 @@ public class Order {
         private Instant updatedAt;
         private Integer totalPrice;
         private String stripePaymentIntentId;
+        private String stripeClientSecret;
         private String transferGroup;
         private Integer platformFeeAmount;
         private String restaurantTransferId;
@@ -191,6 +208,7 @@ public class Order {
         private Address deliveryAddress;
         private Address restaurantAddress;
         private String phoneNumber;
+        private List<OrderItem> orderItems;
         public Builder id(UUID id) {
             this.id = id;
             return this;
@@ -213,6 +231,11 @@ public class Order {
 
         public Builder stripePaymentIntentId(String stripePaymentIntentId) {
             this.stripePaymentIntentId = stripePaymentIntentId;
+            return this;
+        }
+
+        public Builder stripeClientSecret(String stripeClientSecret) {
+            this.stripeClientSecret = stripeClientSecret;
             return this;
         }
 
@@ -253,6 +276,11 @@ public class Order {
 
         public Builder phoneNumber(String phoneNumber) {
             this.phoneNumber = phoneNumber;
+            return this;
+        }
+
+        public Builder orderItems(List<OrderItem> orderItems) {
+            this.orderItems = orderItems;
             return this;
         }
 
