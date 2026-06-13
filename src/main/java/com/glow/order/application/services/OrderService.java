@@ -14,9 +14,12 @@ import com.glow.order.domain.repository.OrderRepository;
 import com.glow.order.domain.shared.DomainPrecondition;
 import com.glow.order.infrastructure.clients.PaymentApiClient;
 import com.glow.order.infrastructure.clients.PaymentIntentRequest;
+import com.glow.order.infrastructure.clients.RestaurantApiClient;
+import com.glow.order.infrastructure.clients.RestaurantNotificationRequest;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.NotFoundException;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,14 +27,20 @@ import java.util.UUID;
 @ApplicationScoped
 public class OrderService {
 
+    private static final Logger LOG = Logger.getLogger(OrderService.class);
+
     private final OrderRepository orderRepository;
     private final OrderDtoMapper mapper;
     private final PaymentApiClient paymentApiClient;
+    private final RestaurantApiClient restaurantApiClient;
 
-    public OrderService(OrderRepository orderRepository, OrderDtoMapper mapper, @RestClient PaymentApiClient paymentApiClient) {
+    public OrderService(OrderRepository orderRepository, OrderDtoMapper mapper,
+                    @RestClient PaymentApiClient paymentApiClient,
+                    @RestClient RestaurantApiClient restaurantApiClient) {
         this.orderRepository = orderRepository;
         this.mapper = mapper;
         this.paymentApiClient = paymentApiClient;
+        this.restaurantApiClient = restaurantApiClient;
     }
 
     public OrderDto createOrder(CreateOrderRequest request) {
@@ -77,6 +86,26 @@ public class OrderService {
             .build();
 
         orderRepository.save(order);
+
+        if (request.restaurantId() != null) {
+            try {
+                restaurantApiClient.notifyRestaurant(
+                    request.restaurantId(),
+                    new RestaurantNotificationRequest(
+                        order.getId(),
+                        order.getDeliveryAddress(),
+                        order.getPhoneNumber(),
+                        order.getOrderItems(),
+                        order.getTotalPrice()
+                    )
+                );
+                LOG.infof("Restaurant %s notified of order %s", request.restaurantId(), order.getId());
+            } catch (Exception e) {
+                // Log but don't fail the checkout — order is already saved and payment intent created
+                LOG.warnf("Failed to notify restaurant %s: %s", request.restaurantId(), e.getMessage());
+            }
+        }
+
         return mapper.toDto(order);
     }
 
@@ -122,6 +151,36 @@ public class OrderService {
 
         orderRepository.update(updatedOrder);
         return mapper.toDto(updatedOrder);
+    }
+
+    public void notifyRestaurant(String orderId, UUID restaurantId) {
+        var order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new NotFoundException("Order not found: " + orderId));
+
+        restaurantApiClient.notifyRestaurant(
+            restaurantId,
+            new RestaurantNotificationRequest(
+                order.getId(),
+                order.getDeliveryAddress(),
+                order.getPhoneNumber(),
+                order.getOrderItems(),
+                order.getTotalPrice()
+            )
+        );
+        LOG.infof("Restaurant %s notified of order %s", restaurantId, orderId);
+    }
+
+    public OrderDto updateStatus(String id, OrderStatus status) {
+        var existing = orderRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Order not found: " + id));
+
+        var updated = existing.toBuilder()
+            .status(status)
+            .build();
+
+        orderRepository.update(updated);
+        LOG.infof("Order %s status updated to %s", id, status);
+        return mapper.toDto(updated);
     }
 
     public boolean deleteOrderById(String id) {
